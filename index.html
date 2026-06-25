@@ -6,11 +6,97 @@
     <meta name="description" content="David Ketchum is a UX designer creating thoughtful digital experiences." />
     <title>David Ketchum | UX Designer</title>
     <link rel="stylesheet" href="styles.css" />
+    <style>
+      .site-header {
+        align-items: center;
+        gap: 16px;
+      }
+
+      .site-header-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+
+      .weather-card {
+        padding: 8px 12px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, rgba(124, 145, 255, 0.18), rgba(45, 212, 191, 0.16));
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.16);
+        min-width: 200px;
+      }
+
+      .weather-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+        gap: 8px;
+      }
+
+      .weather-label {
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #dce7ff;
+      }
+
+      .weather-main {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .weather-icon {
+        font-size: 1.4rem;
+      }
+
+      .weather-temp {
+        font-size: 1.2rem;
+        font-weight: 700;
+      }
+
+      .weather-meta {
+        color: var(--muted, #a7b4c9);
+        font-size: 0.84rem;
+      }
+
+      @media (max-width: 640px) {
+        .site-header {
+          align-items: flex-start;
+        }
+
+        .site-header-left {
+          width: 100%;
+          justify-content: space-between;
+        }
+
+        .weather-card {
+          min-width: 0;
+          width: 100%;
+        }
+      }
+    </style>
   </head>
   <body>
     <div class="wrapper">
       <header class="site-header">
-        <a class="brand" href="index.html">David Ketchum</a>
+        <div class="site-header-left">
+          <a class="brand" href="index.html">David Ketchum</a>
+          <div class="weather-card" id="weather-card">
+            <div class="weather-top">
+              <span class="weather-label">Live weather</span>
+              <span id="weather-location">Locating…</span>
+            </div>
+            <div class="weather-main">
+              <div class="weather-icon" id="weather-icon">🌤️</div>
+              <div class="weather-temp" id="weather-temp">--°F</div>
+            </div>
+            <div class="weather-meta" id="weather-condition">Checking your location…</div>
+          </div>
+        </div>
         <nav class="site-nav">
           <a class="active" href="index.html">Home</a>
           <a href="work.html">Work</a>
@@ -118,5 +204,77 @@
         © 2026 David Ketchum. Crafted with intention.
       </footer>
     </div>
+
+    <script>
+      const weatherCard = document.getElementById('weather-card');
+      const weatherLocation = document.getElementById('weather-location');
+      const weatherIcon = document.getElementById('weather-icon');
+      const weatherTemp = document.getElementById('weather-temp');
+      const weatherCondition = document.getElementById('weather-condition');
+
+      function getWeatherEmoji(code) {
+        if (code === 0) return '☀️';
+        if (code <= 3) return '⛅';
+        if (code <= 48) return '🌫️';
+        if (code <= 57) return '🌧️';
+        if (code <= 67) return '🌨️';
+        if (code <= 77) return '🌨️';
+        if (code <= 86) return '🌤️';
+        return '🌦️';
+      }
+
+      function getWeatherCondition(code) {
+        if (code === 0) return 'Clear sky';
+        if (code <= 3) return 'Mostly clear';
+        if (code <= 48) return 'Foggy';
+        if (code <= 57) return 'Rain';
+        if (code <= 67) return 'Snow';
+        if (code <= 77) return 'Snow grains';
+        if (code <= 86) return 'Thunderstorms';
+        return 'Mixed conditions';
+      }
+
+      function updateWeather(latitude, longitude) {
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&temperature_unit=fahrenheit&timezone=auto`;
+
+        fetch(url)
+          .then((response) => response.json())
+          .then((data) => {
+            const temp = Math.round(data.current.temperature_2m);
+            const code = data.current.weather_code;
+            const locationName = data.timezone ? data.timezone.split('/').pop().replace(/_/g, ' ') : 'your area';
+
+            weatherLocation.textContent = locationName;
+            weatherIcon.textContent = getWeatherEmoji(code);
+            weatherTemp.textContent = `${temp}°F`;
+            weatherCondition.textContent = getWeatherCondition(code);
+          })
+          .catch(() => {
+            weatherLocation.textContent = 'Unavailable';
+            weatherIcon.textContent = '🌤️';
+            weatherTemp.textContent = '--°F';
+            weatherCondition.textContent = 'Weather data unavailable';
+          });
+      }
+
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            updateWeather(position.coords.latitude, position.coords.longitude);
+          },
+          () => {
+            weatherLocation.textContent = 'Location';
+            weatherIcon.textContent = '🌤️';
+            weatherTemp.textContent = '--°F';
+            weatherCondition.textContent = 'Enable location to see your weather.';
+          }
+        );
+      } else {
+        weatherLocation.textContent = 'Location';
+        weatherIcon.textContent = '🌤️';
+        weatherTemp.textContent = '--°F';
+        weatherCondition.textContent = 'Enable location to see your weather.';
+      }
+    </script>
   </body>
 </html>
