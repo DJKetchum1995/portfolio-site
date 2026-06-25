@@ -71,9 +71,9 @@
 
       .weather-forecast {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 10px;
-        min-width: min(420px, 100%);
+        min-width: min(560px, 100%);
       }
 
       .forecast-day {
@@ -118,7 +118,7 @@
         }
 
         .weather-forecast {
-          grid-template-columns: 1fr;
+          grid-template-columns: 1fr 1fr;
         }
       }
     </style>
@@ -151,8 +151,9 @@
         </div>
         <div class="weather-forecast" id="weather-forecast">
           <div class="forecast-day"><span>Today</span><strong>-- / --</strong></div>
-          <div class="forecast-day"><span>Tue</span><strong>-- / --</strong></div>
-          <div class="forecast-day"><span>Wed</span><strong>-- / --</strong></div>
+          <div class="forecast-day"><span>+1</span><strong>-- / --</strong></div>
+          <div class="forecast-day"><span>+2</span><strong>-- / --</strong></div>
+          <div class="forecast-day"><span>+3</span><strong>-- / --</strong></div>
         </div>
       </section>
 
@@ -285,13 +286,16 @@
         return 'Mixed conditions';
       }
 
-      function formatDay(dateString) {
-        return new Date(dateString).toLocaleDateString('en-US', { weekday: 'short' });
+      function formatDateLabel(dateString, index) {
+        const date = new Date(dateString);
+        if (index === 0) return 'Today';
+        if (index === 1) return 'Tomorrow';
+        return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
       }
 
       function renderForecast(days) {
         const items = days.map((day, index) => {
-          const label = index === 0 ? 'Today' : formatDay(day.time);
+          const label = formatDateLabel(day.time, index);
           const high = Math.round(day.temperature_2m_max);
           const low = Math.round(day.temperature_2m_min);
           return `<div class="forecast-day"><span>${label}</span><strong>${high}° / ${low}°</strong></div>`;
@@ -301,7 +305,7 @@
       }
 
       function updateWeather(latitude, longitude) {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=auto&forecast_days=3`;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=auto&forecast_days=4`;
 
         fetch(url)
           .then((response) => response.json())
@@ -330,7 +334,7 @@
         weatherIcon.textContent = '🌤️';
         weatherTemp.textContent = '--°F';
         weatherCondition.textContent = 'Enable location to see your weather.';
-        weatherForecast.innerHTML = '<div class="forecast-day"><span>Today</span><strong>-- / --</strong></div><div class="forecast-day"><span>Tue</span><strong>-- / --</strong></div><div class="forecast-day"><span>Wed</span><strong>-- / --</strong></div>';
+        weatherForecast.innerHTML = '<div class="forecast-day"><span>Today</span><strong>-- / --</strong></div><div class="forecast-day"><span>Tomorrow</span><strong>-- / --</strong></div><div class="forecast-day"><span>+2</span><strong>-- / --</strong></div><div class="forecast-day"><span>+3</span><strong>-- / --</strong></div>';
       }
 
       if (navigator.geolocation) {
