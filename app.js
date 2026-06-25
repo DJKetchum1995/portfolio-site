@@ -62,7 +62,14 @@ function getFallbackLocation() {
     }));
 }
 
-function updateWeather(latitude, longitude, label) {
+function getCityName(latitude, longitude) {
+  return fetch(`https://geocoding-api.open-meteo.com/v1/reverse?latitude=${latitude}&longitude=${longitude}&language=en&format=json`)
+    .then((response) => response.json())
+    .then((data) => data.results?.[0]?.name || data.results?.[0]?.admin1 || 'Your location')
+    .catch(() => 'Your location');
+}
+
+function updateWeather(latitude, longitude, fallbackLabel) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&temperature_unit=fahrenheit&timezone=auto`;
 
   fetch(url)
@@ -71,10 +78,12 @@ function updateWeather(latitude, longitude, label) {
       const temp = Math.round(data.current.temperature_2m);
       const code = data.current.weather_code;
 
-      weatherCity.textContent = label;
-      weatherIcon.textContent = getWeatherEmoji(code);
-      weatherTemp.textContent = `${temp}°F`;
-      weatherCondition.textContent = getWeatherLabel(code);
+      return getCityName(latitude, longitude).then((city) => {
+        weatherCity.textContent = city || fallbackLabel;
+        weatherIcon.textContent = getWeatherEmoji(code);
+        weatherTemp.textContent = `${temp}°F`;
+        weatherCondition.textContent = getWeatherLabel(code);
+      });
     })
     .catch(() => {
       setWeatherFallback('Weather is unavailable right now.');
