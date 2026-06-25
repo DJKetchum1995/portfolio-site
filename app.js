@@ -63,9 +63,18 @@ function getFallbackLocation() {
 }
 
 function getCityName(latitude, longitude) {
-  return fetch(`https://geocoding-api.open-meteo.com/v1/reverse?latitude=${latitude}&longitude=${longitude}&language=en&format=json`)
+  return fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`, {
+    headers: {
+      'Accept-Language': 'en'
+    }
+  })
     .then((response) => response.json())
-    .then((data) => data.results?.[0]?.name || data.results?.[0]?.admin1 || 'Your location')
+    .then((data) => {
+      const address = data.address || {};
+      const city = address.city || address.town || address.village || address.hamlet || address.suburb || address.county || 'Your location';
+      const state = address.state || address.region || '';
+      return state ? `${city}, ${state}` : city;
+    })
     .catch(() => 'Your location');
 }
 
